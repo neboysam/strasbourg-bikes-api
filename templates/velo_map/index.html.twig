@@ -1,0 +1,69 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Carte des V&eacute;lhops{% endblock %}
+
+{% block stylesheets %}
+   <link rel="stylesheet" href="{{ asset('assets/css/styles.css') }}">
+   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.2/dist/leaflet.css"
+     integrity="sha256-sA+zWATbFveLLNqWO2gtiw3HL/lh1giY/Inf1BJ0z14="
+     crossorigin=""/>
+{% endblock %}
+
+{% block body %}
+
+<main>
+    <div class="container main-container">
+        <div class="map-info-top">
+            <h2 class="map-title">
+              Vélhop, les vélos disponibles région Strasbourg
+            </h2>
+            <div class="map-description"></div>
+        </div>
+        <div id="map-velos"></div>
+
+        <div class="map-info-bottom">
+            <p></p>
+        </div>
+    </div>
+</main>
+
+{% endblock %}
+
+{% block javascripts %}
+    <script src="https://unpkg.com/leaflet@1.9.2/dist/leaflet.js"
+     integrity="sha256-o9N1jGDZrf5tS+Ft4gbIK7mYMipq9lqpVJ91xHSyKhg="
+     crossorigin=""></script>
+
+    <script>
+        async function getVelos() {
+            const
+                velosData = await fetch("/velo/velosdata"),
+
+                mapData = await velosData.json(),
+
+                mymap = L.map('map-velos').setView([48.576670, 7.745156], 11),
+
+                attributionStreeMap = 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, ' + '<a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>',
+
+                tileUrl = 'https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token=pk.eyJ1IjoibW9udGVuIiwiYSI6ImNsYWR3ZnVvZTBveXAzcXJhdW05dHpvYnIifQ.HM0k-4lL6lkvspl2LJ-DWQ',
+
+                tiles = L.tileLayer(tileUrl, {
+                    maxZoom: 18,
+                    attribution: attributionStreeMap,
+                    id: 'mapbox/streets-v11',
+                    tileSize: 512,
+                    zoomOffset: -1
+                });
+
+            tiles.addTo(mymap);
+
+            Object.keys(mapData).forEach((key) => {
+                let marker = L.marker([mapData[key].coordonnees[0], mapData[key].coordonnees[1]]).addTo(mymap);
+
+                marker.bindPopup("<b>" + mapData[key].na + "</b><p>Velos disponibles: " + mapData[key].av + "</p><p>Velos totales: " + mapData[key].to + "</p>").openPopup();
+            });
+        }
+
+        getVelos();
+    </script>
+{% endblock %}
